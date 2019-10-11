@@ -13,10 +13,7 @@ def get_upgrade_list(json_list: dict):
 # def clip_triangle()
 
 def short_wait():
-    time.sleep(0.2)
-
-def mid_wait():
-    time.sleep(0.5)
+    time.sleep(0.05)
 
 # 三个车厢货物的位置
 GOODS_POSITIONS = { 1: (0.609,0.854),
