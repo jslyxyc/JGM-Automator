@@ -121,7 +121,7 @@ class Automator:
         if len(good_id) == 3:
             print("[%s] The train is coming with %d gonds." % (time.asctime(), len(good_id)))
             self.harvest(self.harvest_filter, good_id)
-            self.count += 1
+            self.train_count += 1
             print("[%s] Trains count: %d." % (time.asctime(), self.train_count))
         else:
             # print("[%s] No Train."%time.asctime())
