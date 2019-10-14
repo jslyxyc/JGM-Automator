@@ -7,7 +7,7 @@ import random
 
 
 class Automator:
-    def __init__(self, device: str, upgrade_list: list, harvest_filter: list, is_args_list: dict, click_list: dict):
+    def __init__(self, device: str, upgrade_list: list, harvest_filter: list, args_list: dict):
         """
         device: 如果是 USB 连接，则为 adb devices 的返回结果；如果是模拟器，则为模拟器的控制 URL.
         """
@@ -17,14 +17,13 @@ class Automator:
 
         self.upgrade_list = upgrade_list
         self.harvest_filter = harvest_filter
-        self.is_auto_policy = is_args_list["policy"]
-        self.is_auto_task = is_args_list["task"]
-        self.is_auto_train = is_args_list["train"]
-        self.is_auto_upgrade = is_args_list["upgrade"]
-        self.is_auto_collect = is_args_list["collect"]
-        self.is_speedup = is_args_list["speed_up"]
-
-        self.album = click_list["album"]
+        self.album = args_list["album"]
+        self.is_auto_policy = args_list["policy"]
+        self.is_auto_task = args_list["task"]
+        self.is_auto_upgrade = args_list["upgrade"]
+        self.is_auto_collect = args_list["collect"]
+        self.is_auto_train = args_list["train"]
+        self.speedup = args_list["speed_up"]
 
         self.appRunning = False
 
@@ -53,6 +52,11 @@ class Automator:
             # 简单粗暴的方式，处理 “XX之光” 的荣誉显示。不管它出不出现，每次都点一下 确定 所在的位置
             self.d.click(550/1080, 1650/1920)
 
+            # 处理火车供货
+            if self.is_auto_train:
+                print("[%s] Checking train..." % time.asctime())
+                self.check_train()
+
             # 升级政策
             if self.is_auto_policy:
                 print("[%s] Checking policy..." % time.asctime())
@@ -62,11 +66,6 @@ class Automator:
             if self.is_auto_task:
                 print("[%s] Checking task..." % time.asctime())
                 self.check_task()
-
-            # 处理火车供货
-            if self.is_auto_train:
-                print("[%s] Checking train..." % time.asctime())
-                self.check_train()
 
             # 升级建筑
             if self.is_auto_upgrade:
@@ -124,23 +123,17 @@ class Automator:
 
     def check_train(self):
         good_id = self._has_good()
-        if len(good_id) == 3:
-            print("[%s] The train is coming with %d gonds." % (time.asctime(), len(good_id)))
-            self.harvest(self.harvest_filter, good_id)
-            self.train_count += 1
-            print("[%s] Trains count: %d." % (time.asctime(), self.train_count))
-        else:
-            # print("[%s] No Train."%time.asctime())
-            findSomething = True
-
-        # 再看看是不是有货没收，如果有就重启app
-        good_id = self._has_good()
-        if len(good_id) > 0 and self.is_speedup:
-            self.d.app_stop("com.tencent.jgm")
-            print("[%s] The train is coming with %d gonds. Resetting app..." % (time.asctime(), len(good_id)))
-            # 重新启动app
-            self.d.app_start("com.tencent.jgm")
-            time.sleep(15)
+        if len(good_id): # 有货
+            if len(good_id) >= self.speedup: # 直接收货
+                print("[%s] The train is coming with %d gonds." % (time.asctime(), len(good_id)))
+                self.harvest(self.harvest_filter, good_id)
+                self.train_count += 1
+                print("[%s] Trains count: %d." % (time.asctime(), self.train_count))
+            else: # 重启
+                self.d.app_stop("com.tencent.jgm")
+                print("[%s] The train is coming with %d gonds. Resetting app..." % (time.asctime(), len(good_id)))
+                self.d.app_start("com.tencent.jgm")
+                time.sleep(15)
 
     def upgrade(self, upgrade_list):
         if not len(upgrade_list):
