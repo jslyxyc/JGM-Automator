@@ -13,12 +13,17 @@ if __name__ == '__main__':
 
     # 开关参数列表
     is_args_list = {
-        "policy": True, # 是否自动升级政策
-        "task": True, # 是否自动完成城市任务
-        "train": True, # 是否自动处理火车供货
+        "policy": False, # 是否自动升级政策
+        "task": False, # 是否自动完成城市任务
+        "train": False, # 是否自动处理火车供货
         "upgrade": False, # 是否自动升级建筑
         "collect": True, # 是否自动收金币
-        "speed_up": True # 是否自动重启加速刷火车
+        "speed_up": False, # 是否自动重启加速刷火车
+    }
+
+    # 其他操作列表
+    click_list = {
+        "album": 0 # 相册
     }
 
     # adb设备列表
@@ -32,6 +37,16 @@ if __name__ == '__main__':
 
     if b'connected' in subprocess.check_output('adb connect '+ adb_devices["MuMu"]):
         print("Successfully connected to MuMu.")
-    instance = Automator(adb_devices["MuMu"], up_list, harvest_filter, is_args_list)
-    # 启动脚本。
+    instance = Automator(adb_devices["MuMu"], up_list, harvest_filter, is_args_list, click_list)
+
+    # 启动脚本
     instance.start()
+
+    # TODO & FIXME
+    # 树莓派移植
+    # 政策和城市任务只在没有火车时检测（优先级）
+    # 收货间隔时间太长 
+    # The train is coming with 3 gonds. Resetting app...
+    # 完成城市任务后不收金币
+    # 流水线、多线程
+    # 应用启动至前台，The train is coming with 3 gonds.

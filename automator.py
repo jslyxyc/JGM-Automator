@@ -7,7 +7,7 @@ import random
 
 
 class Automator:
-    def __init__(self, device: str, upgrade_list: list, harvest_filter: list, is_args_list: dict):
+    def __init__(self, device: str, upgrade_list: list, harvest_filter: list, is_args_list: dict, click_list: dict):
         """
         device: 如果是 USB 连接，则为 adb devices 的返回结果；如果是模拟器，则为模拟器的控制 URL.
         """
@@ -24,6 +24,8 @@ class Automator:
         self.is_auto_collect = is_args_list["collect"]
         self.is_speedup = is_args_list["speed_up"]
 
+        self.album = click_list["album"]
+
         self.appRunning = False
 
     def start(self):
@@ -32,19 +34,22 @@ class Automator:
         """
         self.train_count = 0 # 统计火车供货次数
         self.running_count = 0 # 记录执行次数
-        while True:
+
+        while not self.appRunning:
             # 判断jgm进程是否在前台, 最多等待20秒，否则唤醒到前台
             if self.d.app_wait("com.tencent.jgm", front=True, timeout=20):
-                if not self.appRunning:
-                    # 从后台换到前台，留一点反应时间
-                    print("[%s] App is front. JGM agent start in 3 seconds." % time.asctime())
-                    time.sleep(3) 
+                # 从后台换到前台，留一点反应时间
+                print("[%s] App is front. JGM agent start in 3 seconds." % time.asctime())
+                time.sleep(3) 
                 self.appRunning = True
             else:
                 self.d.app_start("com.tencent.jgm")
                 self.appRunning = False
-                continue
 
+        # 点相册
+        self.click_albums()
+
+        while True:
             # 简单粗暴的方式，处理 “XX之光” 的荣誉显示。不管它出不出现，每次都点一下 确定 所在的位置
             self.d.click(550/1080, 1650/1920)
 
@@ -73,10 +78,10 @@ class Automator:
                 print("[%s] Collecting coins..." % time.asctime())
                 self.collect_coins()
 
-            time.sleep(2)
+            time.sleep(random.randint(1, 3))
             self.running_count += 1
             print("[%s] Running count: %d." % (time.asctime(), self.running_count))
-            print("[%s] -------------------------------" % time.asctime())
+            print("[%s] ------------------------------" % time.asctime())
 
 
     def check_policy(self):
@@ -104,7 +109,7 @@ class Automator:
                 # 如果还没出现绿色箭头，往下划
                 else:
                     self.d.swipe(0.482, 0.809, 0.491, 0.516, duration = 0.3)
-                    time.sleep(3) # 停顿，等待屏幕划动结束
+                    time.sleep(1.5) # 停顿，等待屏幕划动结束
             self._back_to_main()
 
     def check_task(self):
@@ -246,3 +251,21 @@ class Automator:
         for i in range(3):
             self.d.click(0.057, 0.919)
             short_wait()
+
+    # 点相册
+    def click_albums(self):
+        if (self.album):
+            for i in range(3): # 进入商店界面
+                self.d.click(208/530, 0.95)
+                short_wait()
+            for i in range(self.album):
+                print("[%s] Click albums... %d left." % (time.asctime(), self.album))
+                self.d.click(0.5, 680/940)
+                time.sleep(2.5)
+                self.d.click(0.5, 680/940)
+                self.album -= 1
+            for i in range(3): # 进入建设界面
+                self.d.click(0.05, 0.95)
+                short_wait()
+            print("[%s] --- Click albums finished! ---" % time.asctime())
+            print("[%s] ------------------------------" % time.asctime())
